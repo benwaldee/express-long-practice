@@ -1,6 +1,19 @@
+//app.js structure
+
+//1 dependency imports (requires that arent routes)
+//2 router imports
+//3 configurations (middleware / changing express - wrapped in middleware l24/17)
+//4 router middlewares (route handling - ends with catch all error creation)
+//5 error handlers
+
+
+
 const express = require('express');
-const app = express();
 require('express-async-errors');
+
+// require('dotenv').config();
+
+const app = express();
 //phase 1
 
 app.use('/static', express.static('assets'))
@@ -36,6 +49,8 @@ app.get('/test-error', async (req, res) => {
 app.use((req, res, next) => {
   console.log(req.method)
   console.log(req.url)
+  //phase4
+  console.log(process.env.SECRET)
 
   res.on('finish', () => {
     console.log(res.statusCode)
@@ -46,10 +61,14 @@ app.use((req, res, next) => {
 
 
 //phase 3
-const dogRouter = require('./routes/dogs')
-app.use('/dogs', dogRouter)
+const { router } = require('./routes/dogs')
+const { validateDogId } = require('./routes/dogs')
+app.use('/dogs', router)
 
-
+//phase 5
+const dogFoodRouter = require('./routes/dog-foods')
+app.use('/dogs/:dogId', validateDogId)
+app.use('/dogs', dogFoodRouter)
 
 
 
@@ -65,13 +84,37 @@ app.use((err, req, res, next) => {
   const errCode = err.statusCode || 500
   console.log("message", err.message,
     "statusCode", errCode)
-  res.status(errCode)
-  res.json({
-    "message": err.message,
-    "statusCode": errCode
-  })
-
+  // res.status(errCode)
+  // res.json({
+  //   "message": err.message,
+  //   "statusCode": errCode
+  // })
+  next(err)
 })
+
+//phase 4 -error handling
+app.use((err, req, res, next) => {
+  console.log(err.message)
+  res.status(err.statusCode || 500)
+  const errCode = err.statusCode || 500
+  console.log(process.env.NODE_ENV)
+  if (process.env.NODE_ENV !== 'production') {
+    res.json(
+      {
+        "message": err.message || "Something went wrong",
+        "statusCode": errCode,
+        "stack": err.stack
+      })
+  } else {
+    res.json(
+      {
+        "message": err.message || "Something went wrong",
+        "statusCode": errCode,
+      })
+  }
+})
+
+
 
 const port = 5000;
 app.listen(port, () => console.log('Server is listening on port', port));
