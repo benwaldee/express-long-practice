@@ -1,7 +1,13 @@
 const express = require('express');
 const app = express();
+require('express-async-errors');
+
+app.use('/static', express.static('assets'))
+
+app.use(express.json());
 
 // For testing purposes, GET /
+// URL /static/images/dog1.jpg
 app.get('/', (req, res) => {
   res.json("Express server running. No content provided at root level. Please use another route.");
 });
