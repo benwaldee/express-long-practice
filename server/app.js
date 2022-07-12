@@ -32,7 +32,7 @@ app.get('/test-error', async (req, res) => {
 });
 
 
-//phase 2
+//phase 2 top
 app.use((req, res, next) => {
   console.log(req.method)
   console.log(req.url)
@@ -45,6 +45,15 @@ app.use((req, res, next) => {
 })
 
 
+//phase 3
+const dogRouter = require('./routes/dogs')
+app.use('/dogs', dogRouter)
+
+
+
+
+
+//phase 2 bottom
 app.use((req, res, next) => {
   const err = new Error("The requested resource couldn't be found.")
   err.statusCode = 404
@@ -56,6 +65,7 @@ app.use((err, req, res, next) => {
   const errCode = err.statusCode || 500
   console.log("message", err.message,
     "statusCode", errCode)
+  res.status(errCode)
   res.json({
     "message": err.message,
     "statusCode": errCode
